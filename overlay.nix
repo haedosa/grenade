@@ -5,20 +5,20 @@ final: prev: with final; {
     overrides = lib.composeManyExtensions (with haskell.lib; [
                   (old.overrides or (_: _: {}))
                   (self: super: {
-                    # formatting = self.formatting_7_1_2;
                     colonnade = doJailbreak (markUnbroken super.colonnade);
                     streaming-utils = doJailbreak (markUnbroken super.streaming-utils);
+                    grenade = haskell-nix.project { src = ./.; };
                   })
-                  (packageSourceOverrides { grenade = ./.; })
+                  # (packageSourceOverrides { grenade = ./.; })
                 ]);
   });
 
   grenade = haskell.lib.justStaticExecutables haskellPackages.grenade;
 
-  ghcWithgrenade = haskellPackages.ghcWithPackages (p: [ p.grenade ]);
+  # ghcWithgrenade = haskellPackages.ghcWithPackages (p: [ p.grenade ]);
 
-  ghcWithgrenadeAndPackages = select :
-    haskellPackages.ghcWithPackages (p: ([ p.grenade ] ++ select p));
+  # ghcWithgrenadeAndPackages = select :
+  #   haskellPackages.ghcWithPackages (p: ([ p.grenade ] ++ select p));
 
 
   jupyterlab = mkJupyterlab {

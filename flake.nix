@@ -3,22 +3,28 @@
 
   inputs = {
 
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-19.03";
-    flake-utils.url = "github:numtide/flake-utils/master";
+    haedosa.url = "github:haedosa/flakes";
+    nixpkgs.follows = "haedosa/nixpkgs";
+    flake-utils.follows = "haedosa/flake-utils";
+
+    haskellNix.url = "github:input-output-hk/haskell.nix";
+    haskellNix.inputs.nixpkgs.follows = "haedosa/nixpkgs";
 
   };
 
   outputs =
     inputs@{ self, nixpkgs, flake-utils, ... }:
     {
-      overlays = [ (import ./overlay.nix) ];
-      overlay = nixpkgs.lib.composeManyExtensions self.overlays;
+      overlay = nixpkgs.lib.composeManyExtensions [
+        inputs.haskellNix.overlay
+        (import ./overlay.nix)
+      ];
     } // flake-utils.lib.eachDefaultSystem (system:
 
       let
         pkgs = import nixpkgs {
           inherit system;
-          config = {};
+          inherit (inputs.haskellNix) config;
           overlays = [ self.overlay ];
         };
 
