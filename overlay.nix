@@ -1,25 +1,26 @@
 final: prev: with final; {
 
+  grenade-project = haskell-nix.project {
+    src = ./.;
+    compiler-nix-name = "ghc884";
+    shell.tools = {
+      cabal = "latest";
+      hlint = "latest";
+      haskell-language-server = "latest";
+    };
+    shell.buildInputs = with final; [
 
-  haskellPackages = prev.haskellPackages.override (old: {
-    overrides = lib.composeManyExtensions (with haskell.lib; [
-                  (old.overrides or (_: _: {}))
-                  (self: super: {
-                    colonnade = doJailbreak (markUnbroken super.colonnade);
-                    streaming-utils = doJailbreak (markUnbroken super.streaming-utils);
-                    grenade = haskell-nix.project { src = ./.; };
-                  })
-                  # (packageSourceOverrides { grenade = ./.; })
-                ]);
-  });
+    ];
+  };
 
-  grenade = haskell.lib.justStaticExecutables haskellPackages.grenade;
-
-  # ghcWithgrenade = haskellPackages.ghcWithPackages (p: [ p.grenade ]);
-
-  # ghcWithgrenadeAndPackages = select :
-  #   haskellPackages.ghcWithPackages (p: ([ p.grenade ] ++ select p));
-
+  # haskellPackages = prev.haskellPackages.override (old: {
+  #   overrides = lib.composeManyExtensions (with haskell.lib; [
+  #                 (old.overrides or (_: _: {}))
+  #                 (self: super: {
+  #                   grenade = (grenade-project.flake {}).packages."grenade:lib:grenade";
+  #                 })
+  #               ]);
+  # });
 
   jupyterlab = mkJupyterlab {
     haskellKernelName = "grenade";
