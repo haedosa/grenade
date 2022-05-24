@@ -14,38 +14,24 @@
 
   outputs =
     inputs@{ self, nixpkgs, flake-utils, ... }:
-    {
-      overlay = nixpkgs.lib.composeManyExtensions [
-        inputs.haskellNix.overlay
-        (import ./overlay.nix)
-      ];
-    } // flake-utils.lib.eachDefaultSystem (system:
-
+      flake-utils.lib.eachSystem [ "x86_64-linux" ] (system:
       let
+
+        overlays = [
+          inputs.haskellNix.overlay
+          (import ./overlay.nix)
+        ];
+
         pkgs = import nixpkgs {
-          inherit system;
+          inherit system overlays;
           inherit (inputs.haskellNix) config;
-          overlays = [ self.overlay ];
         };
 
-      in rec {
-        defaultPackage = pkgs.haskellPackages.grenade;
-        devShell = import ./develop.nix { inherit pkgs; };
+        flake = pkgs.grenade-project.flake {};
 
-        apps = let
-          ghcEnv = pkgs.haskellPackages.ghcWithPackages (p: [ p.grenade ]);
-        in {
-          jupyter = {
-            type = "app";
-            program = "${pkgs.jupyterlab}/bin/jupyter-lab";
-          };
-          ghci = {
-            type = "app";
-            program = "${ghcEnv}/bin/ghci";
-          };
-        };
-        defaultApp = apps.ghci;
-      }
+      in flake // (rec {
+        defaultPackage = flake.packages."grenade:lib:grenade";
+      })
     );
 
 }
